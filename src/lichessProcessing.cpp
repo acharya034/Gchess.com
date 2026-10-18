@@ -1,5 +1,29 @@
 #include "lichessProcessing.h"
 
+bool lichessRequest(requestType newRt = NONE) {
+    if (newRt == NONE) {
+        currentRT = lastRT[0];
+        lastRT[0] = lastRT[1];
+        lastRT[1] = NONE;
+        return true;
+    }
+
+    if (currentRT == NONE){
+        currentRT = newRt;
+        return true;
+    }
+    else if(lastRT[0] == NONE) {
+        lastRT[0] = newRt;
+        return true;
+    }
+    else if(lastRT[1] == NONE) {
+        lastRT[1] = newRt;
+        return true;
+    }
+    else {
+        return false;
+    }
+}
 
 bool getEvent(JsonDocument& doc, String& type) {
     // 1. Verify if the raw TCP socket has data waiting to be read
