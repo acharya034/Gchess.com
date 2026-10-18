@@ -1,29 +1,166 @@
 #pragma once
 
 #include <Arduino.h>
-#include <httpClient.h>
+#include <HTTPClient.h>
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
 
 
-// global variables
-// those are for event stream connection
-WiFiClient eventClient; 
-HTTPClient eventHttp; 
+// --------------------------------------------------
+// Global variables
+// --------------------------------------------------
 
-// those are for all requests that gest reused and the wifi connection will be kept alive for all requests.
-WiFiClient requestClient;
+WiFiClientSecure eventClient;
+HTTPClient eventHttp;
+
+WiFiClientSecure requestClient;
 HTTPClient requestHttp;
 
-// game id for the current game that is being played and if none then it will be empty string
 String gameId;
 
-// variables and functions to handel http request
-enum requestType {NONE, CHALLENGE, MOVE, SEEK, STREAM, DRAW, RESIGN, ABORT, OFFER_DRAW, ACCEPT_DRAW, DECLINE_DRAW, OFFER_TAKEBACK, ACCEPT_TAKEBACK, DECLINE_TAKEBACK, CLAM_VICTORY, CHAT, GET_CHAT, GET_ACCOUNT};
-
 requestType currentRT = NONE;
-requestType lastRT[2] = {NONE, NONE};
+requestType lastRT[2] = { NONE, NONE };
 
+JsonDocument eventDoc;
+JsonDocument requestDoc;
+JsonDocument chatDoc;
+JsonDocument accountDoc[3];
 
-// call the lichessRequest function with parameter when adding task and call it without prameter when the task is done.
+String lichessToken;
+
+String selfUsername;
+String opponentUsername;
+String accountUsername;
+
+String challengeId;
+
+bool challengeRated = false;
+uint16_t challengeClockLimit = 300;
+uint16_t challengeClockIncrement = 1;
+String challengeVariant = "standard";
+String challengeFen = "";
+String challengeColor = "random";
+
+uint8_t aiLevel = 1;
+String aiColor = "random";
+uint16_t aiClockLimit = 300;
+uint16_t aiClockIncrement = 1;
+
+String move;
+
+bool seekRated = false;
+uint16_t seekTime = 300;
+uint16_t seekIncrement = 1;
+String seekColor = "random";
+String seekRatingRange = "";
+
+String chatMessage;
+String chatRoom = "player";
+
+// Request queue
+enum requestType {
+    NONE,
+    CHALLENGE,
+    ACCEPT_CHALLENGE,
+    DECLINE_CHALLENGE,
+    CHALLENGE_AI,
+    MOVE,
+    SEEK,
+    STREAM,
+    RESIGN,
+    ABORT,
+    OFFER_DRAW,
+    ACCEPT_DRAW,
+    DECLINE_DRAW,
+    OFFER_TAKEBACK,
+    ACCEPT_TAKEBACK,
+    DECLINE_TAKEBACK,
+    CLAM_VICTORY,
+    CHAT,
+    GET_CHAT,
+    GET_ACCOUNT
+};
+
+extern requestType currentRT;
+extern requestType lastRT[2];
+
+// Queue management
 bool lichessRequest(requestType newRt = NONE);
+bool lichessSendRequest();
+
+// JSON documents
+extern JsonDocument eventDoc;
+extern JsonDocument requestDoc;
+extern JsonDocument chatDoc;
+extern JsonDocument accountDoc[3];
+
+// Event stream
+bool getEvent();
+
+// Authentication
+extern String lichessToken;
+
+// Usernames
+extern String selfUsername;
+extern String opponentUsername;
+extern String accountUsername;
+
+// Challenge settings
+extern String challengeId;
+extern bool challengeRated;
+extern uint16_t challengeClockLimit;
+extern uint16_t challengeClockIncrement;
+extern String challengeVariant;
+extern String challengeFen;
+extern String challengeColor;
+
+// AI settings
+extern uint8_t aiLevel;
+extern String aiColor;
+extern uint16_t aiClockLimit;
+extern uint16_t aiClockIncrement;
+
+// Move
+extern String move;
+
+// Seek settings
+extern bool seekRated;
+extern uint16_t seekTime;
+extern uint16_t seekIncrement;
+extern String seekColor;
+extern String seekRatingRange;
+
+// Chat settings
+extern String chatMessage;
+extern String chatRoom;
+
+// Challenge functions
+bool createChallenge();
+bool acceptChallenge();
+bool declineChallenge();
+bool challengeAI();
+
+// Game functions
+bool sendMove();
+bool startSeek();
+bool startStream();
+
+bool resignGame();
+bool abortGame();
+
+bool offerDraw();
+bool acceptDraw();
+bool declineDraw();
+
+bool offerTakeback();
+bool acceptTakeback();
+bool declineTakeback();
+
+bool claimVictory();
+
+// Chat functions
+bool sendChatMessage();
+bool getChatMessages();
+
+// Account functions
+bool getAccountInfo();
