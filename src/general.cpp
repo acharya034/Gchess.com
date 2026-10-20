@@ -1,71 +1,196 @@
 #include "general.h"
-#include <Arduino.h>
-#include <TFTInput.h>
 
-void tftInput(bool pressed, uint8_t x, uint8_t y){
-    if (pressed){
-        button1.contain(x, y);
-        button2.contain(x, y);
-        button3.contain(x, y);
-        button4.contain(x, y);
-        button5.contain(x, y);
-        button6.contain(x, y);
-        button7.contain(x, y);
-        button8.contain(x, y);
-        button9.contain(x, y);
-        button1.contain(x, y);
+// Instantiate the global object handles here safely
+int connectedWifiStrength = 0;
+uint8_t pressedButton = 0;
+unsigned long buttonReleasedStartTime = 0;
 
-        slider1.contain(x, y);
-        slider2.contain(x, y);
-        slider3.contain(x, y);
-        slider4.contain(x, y); 
+WiFiMulti wifiMulti;
+Preferences preferences;
+TFT_eSPI display = TFT_eSPI();
+TFT_eSprite sprite = TFT_eSprite(&display);
 
-        lastPressed = true;
+const char* default_ssid = "Gchess";
+const char* default_password = "Gchess@123";
+
+// Local internal setup function to populate WiFiMulti on boot with infinite storage keys
+void initWifiManager() {
+  WiFi.mode(WIFI_STA);
+  
+  preferences.begin("wifi_config", true);
+  int count = preferences.getInt("count", 0);
+  
+  for (int i = 0; i < count; i++) {
+    String ssidKey = "s_" + String(i);
+    String passKey = "p_" + String(i);
+    
+    String storedSSID = preferences.getString(ssidKey.c_str(), "");
+    String storedPass = preferences.getString(passKey.c_str(), "");
+    
+    if (storedSSID.length() > 0) {
+      wifiMulti.addAP(storedSSID.c_str(), storedPass.c_str());
     }
-
-    else if(lastPressed){
-        button1.action();
-        button2.action();
-        button3.action();
-        button4.action();
-        button5.action();
-        button6.action();
-        button7.action();
-        button8.action();
-        button9.action();
-        button1.action();
-
-        lastPressed = false;
-    }
-
-    button1.disable();
-    button2.disable();
-    button3.disable();
-    button4.disable();
-    button5.disable();
-    button6.disable();
-    button7.disable();
-    button8.disable();
-    button9.disable();
-    button1.disable();
-
-    slider1.disable();
-    slider2.disable();
-    slider3.disable();
-    slider4.disable(); 
+  }
+  preferences.end();
 }
 
-// function for drawing wifi indicator on the screen.
-void drawWifiIndicator(
-    uint8_t strength,
-    int8_t x, int8_t y,
-    uint8_t size,
-    uint16_t bg_color
-) {
-    // Map 0–255 to a drawing size, with 150 ≈ 30 pixels.
-    uint16_t scaledSize = (uint16_t)size * 30 / 150;
+// Single non-blocking engine running inside main loop() updating the global integer
+void maintainWifiConnection() {
+  static unsigned long lastCheckTime = 0;
+  if (millis() - lastCheckTime < 3000) return; 
+  lastCheckTime = millis();
 
-    // Keep the minimum visible size at 1 pixel.
+  // Run the background connection handling engine
+  wifiMulti.run();
+
+  // Dynamically calculate the active link's strength for your global toolbar variable
+  if (WiFi.status() == WL_CONNECTED) {
+    long rssi = WiFi.RSSI();
+    if (rssi >= -67)      connectedWifiStrength = 3;
+    else if (rssi >= -80) connectedWifiStrength = 2;
+    else                  connectedWifiStrength = 1;
+  } else {
+    connectedWifiStrength = 0; 
+  }
+}
+
+// Verifies credentials by trying to connect first. Saves to flash ONLY if successful.
+bool addUserNetwork(const char* ssid, const char* password) {
+  // 1. Try connecting to the provided network credentials first
+  bool success = connectToWifi(ssid, password);
+  
+  // 2. If connection fails, reject saving and return false immediately
+  if (!success) {
+    return false;
+  }
+  
+  // 3. If connection succeeds, permanently store it into NVS Flash Storage
+  preferences.begin("wifi_config", false);
+  int totalSaved = preferences.getInt("count", 0);
+  
+  String ssidKey = "s_" + String(totalSaved);
+  String passKey = "p_" + String(totalSaved);
+  
+  preferences.putString(ssidKey.c_str(), ssid);
+  preferences.putString(passKey.c_str(), password);
+  
+  preferences.putInt("count", totalSaved + 1);
+  preferences.end();
+  
+  // 4. Pass directly into the active auto-reconnect list
+  wifiMulti.addAP(ssid, password);
+  
+  return true;
+}
+
+// Complete NVS Namespace Wipe out
+void clearAllStoredNetworks() {
+  preferences.begin("wifi_config", false);
+  preferences.clear();
+  preferences.end();
+}
+
+// Scanning and algorithmic classification function (No static limit bounds)
+int populateWifiSettingsPage(WifiUIData* outUiList, int maxListSize) {
+  preferences.begin("wifi_config", true);
+  int totalSaved = preferences.getInt("count", 0);
+  
+  String* cachedSSIDs = new String[totalSaved];
+  String* cachedPasses = new String[totalSaved];
+  
+  for (int i = 0; i < totalSaved; i++) {
+    String ssidKey = "s_" + String(i);
+    String passKey = "p_" + String(i);
+    cachedSSIDs[i] = preferences.getString(ssidKey.c_str(), "");
+    cachedPasses[i] = preferences.getString(passKey.c_str(), "");
+  }
+  preferences.end();
+
+  int foundNetworks = WiFi.scanNetworks();
+  int uiCount = 0;
+
+  for (int i = 0; i < foundNetworks && uiCount < maxListSize; i++) {
+    String currentSSID = WiFi.SSID(i);
+    long rssi = WiFi.RSSI(i);
+    
+    if (currentSSID.length() == 0) continue; 
+
+    outUiList[uiCount].ssid = currentSSID;
+    outUiList[uiCount].passkey = ""; 
+
+    int strength = 0;
+    if (rssi >= -67)      strength = 3;
+    else if (rssi >= -80) strength = 2;
+    else                  strength = 1;
+
+    int statusType = 0; // 0 = Unknown
+    
+    for (int j = 0; j < totalSaved; j++) {
+      if (currentSSID == cachedSSIDs[j]) {
+        statusType = 1; // 1 = Known
+        outUiList[uiCount].passkey = cachedPasses[j];
+        break;
+      }
+    }
+
+    if (WiFi.status() == WL_CONNECTED && currentSSID == WiFi.SSID()) {
+      statusType = 2; // 2 = Connected
+    }
+
+    outUiList[uiCount].data = (statusType * 10) + strength;
+    uiCount++;
+  }
+
+  delete[] cachedSSIDs;
+  delete[] cachedPasses;
+  WiFi.scanDelete(); 
+  return uiCount; 
+}
+
+// Blocking function to attempt network authentication connection
+bool connectToWifi(const char* username, const char* passkey) {
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(username, passkey);
+  
+  unsigned long startAttemptTime = millis();
+  const unsigned long timeout = 10000; // 10-second authentication timeout window
+  
+  while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < timeout) {
+    delay(200); 
+  }
+  
+  if (WiFi.status() == WL_CONNECTED) {
+    return true;
+  } else {
+    WiFi.disconnect(); 
+    return false;
+  }
+}
+
+void buttonPressed(uint8_t buttonId) {
+    buttonReleasedStartTime = millis();
+    pressedButton = buttonId;
+}
+
+bool isButtonReleased(uint8_t buttonId, unsigned long BUTTON_RELEASED_TIMEOUT) {
+    if (pressedButton == buttonId && (millis() - buttonReleasedStartTime >= BUTTON_RELEASED_TIMEOUT)) {
+        buttonReleasedStartTime = 0; 
+        pressedButton = 0; 
+        return true;
+    }
+    return false;
+}
+
+bool touchContained(uint16_t touchX, uint16_t touchY, int32_t x, int32_t y, int32_t width, int32_t height) {
+    return (touchX > x && touchX <= x + width && touchY > y && touchY <= y + height);
+}
+
+uint8_t getBatteryLevel() {
+    return 3; // Template placeholder
+}
+
+void drawWifiIndicator(uint8_t strength, int32_t x, int32_t y, uint8_t size, int32_t bg_color) {
+    uint16_t scaledSize = (uint16_t)size * 30 / 150;
     if (scaledSize == 0) scaledSize = 1;
 
     uint16_t active   = TFT_WHITE;
@@ -75,73 +200,49 @@ void drawWifiIndicator(
     int cy = y + scaledSize - scaledSize / 8;
     int r  = scaledSize / 2;
 
-    // Wi-Fi dot
-    tft.fillSmoothCircle(
-        cx, cy,
-        max(1, (int)scaledSize / 16),
-        (strength > 0) ? active : inactive, bg_color
-    );
+    sprite.fillSmoothCircle(cx, cy, max(1, (int)scaledSize / 16), (strength > 0) ? active : inactive, bg_color);
 
-    // Three Wi-Fi arcs, from inner to outer
     for (uint8_t i = 0; i < 3; i++) {
         int radius = r * (i + 1) / 3;
-
-        // Avoid zero-radius arcs at small sizes
         if (radius < 1) continue;
-
         uint16_t color = (i < strength) ? active : inactive;
-
-        tft.drawSmoothArc(
-            cx, cy,
-            radius, radius,
-            225, 315,
-            color, bg_color
-        );
+        sprite.drawSmoothArc(cx, cy, radius, radius, 225, 315, color, bg_color);
     }
 }
 
-// Function for drawing a battery indicator with 3 blocks
-void drawBatteryIndicator(uint8_t strength, int8_t x, int8_t y, uint8_t size, uint16_t bg_color) {
-    // Map 0–255 to a drawing size, with 150 ≈ 30 pixels wide.
+void drawBatteryIndicator(uint8_t strength, int32_t x, int32_t y, uint8_t size, int32_t bg_color) {
     uint16_t scaledWidth = (uint16_t)size * 30 / 150;
     if (scaledWidth < 6) scaledWidth = 6; 
 
-    // Maintain aspect ratio (approx 2:1 width to height)
     uint16_t scaledHeight = scaledWidth * 15 / 30;
     if (scaledHeight < 4) scaledHeight = 4;
 
-    // Color definitions
     uint16_t bodyColor = TFT_BLUE;
-    uint16_t activeColor = TFT_WHITE; // Default active color is White for 1, 2, 3
-
-    // Determine how many segments to fill and their active color
+    uint16_t activeColor = TFT_WHITE; 
     int8_t segmentsToFill = 0;
 
     if (strength == 0) {
         segmentsToFill = 1;
         activeColor = TFT_RED;
     } else if (strength >= 1 && strength <= 3) {
-        segmentsToFill = strength; // 1, 2, or 3 White cells
+        segmentsToFill = strength; 
         activeColor = TFT_WHITE;
     } else if (strength == 4) {
-        segmentsToFill = 3;        // All 3 cells filled
-        activeColor = TFT_GREEN;   // Green for level 4
+        segmentsToFill = 3;        
+        activeColor = TFT_GREEN;   
     } else if (strength >= 5) {
-        segmentsToFill = 3;        // All 3 cells filled
-        activeColor = TFT_BLUE;    // Blue for level 5 (Charging)
+        segmentsToFill = 3;        
+        activeColor = TFT_BLUE;    
     }
 
-    // 1. Draw Outer Battery Body Outline
-    tft.drawSmoothRoundRect(x, y, 2, 2, scaledWidth, scaledHeight, bodyColor, bg_color);
+    sprite.drawSmoothRoundRect(x, y, 2, 2, scaledWidth, scaledHeight, bodyColor, bg_color);
 
-    // 2. Draw Battery Terminal Cap
     int8_t capWidth = max(1, (int)scaledWidth / 12);
     int8_t capHeight = max(2, (int)scaledHeight / 3);
     int8_t capX = x + scaledWidth;
     int8_t capY = y + (scaledHeight - capHeight) / 2;
-    tft.fillSmoothRoundRect(capX, capY, capWidth, capHeight, 1, bodyColor, bg_color);
+    sprite.fillSmoothRoundRect(capX, capY, capWidth, capHeight, 1, bodyColor, bg_color);
 
-    // 3. Draw Inner Cells (3 Blocks Total)
     int8_t innerX = x + 2;
     int8_t innerY = y + 2;
     int8_t innerWidth = scaledWidth - 4;
@@ -155,11 +256,46 @@ void drawBatteryIndicator(uint8_t strength, int8_t x, int8_t y, uint8_t size, ui
 
     for (uint8_t i = 0; i < totalSegments; i++) {
         int8_t segX = innerX + i * (segmentWidth + segmentGap);
-        
         if (i < segmentsToFill) {
-            // Fill the active cells with the decided color
-            tft.fillSmoothRoundRect(segX, innerY, segmentWidth, innerHeight, 0, activeColor, bg_color);
+            sprite.fillSmoothRoundRect(segX, innerY, segmentWidth, innerHeight, 0, activeColor, bg_color);
         }
     }
 }
 
+void drawbackbutton(int32_t x, int32_t y, int32_t width, int32_t height, uint16_t &touchX, uint16_t &touchY, uint16_t color, uint16_t bg_color) {
+    uint8_t BACK_BUTTON_CONSTANT = 201;
+    
+    if (touchContained(touchX, touchY, x, y, width, height)) {
+        pressedButton = BACK_BUTTON_CONSTANT;
+        buttonPressed(BACK_BUTTON_CONSTANT);
+        color = TFT_BLUE;
+    } else if (pressedButton == BACK_BUTTON_CONSTANT) {
+        if (isButtonReleased(BACK_BUTTON_CONSTANT)) {
+            backPage();
+        }
+    }
+
+    sprite.fillRect(x, y, width, height, TFT_WHITE);
+    sprite.fillTriangle(x + width / 3 + 2, y + height / 4 + 2,
+                        x + width / 3 + 2, y + height * 3 / 4 - 2,
+                        x + width * 2 / 3 - 2, y + height / 2,
+                        color);
+}
+
+void drawToolbar(uint16_t &touchX, uint16_t &touchY, uint16_t bg_color) {
+    uint8_t TOOLPAGECONSTANT = 202;
+    
+    drawbackbutton(0, 0, 30, 30, touchX, touchY, TFT_WHITE, bg_color);
+
+    if (touchContained(touchX, touchY, 30, 0, 30, 210)) {
+        buttonPressed(TOOLPAGECONSTANT);
+    }
+
+    if (isButtonReleased(TOOLPAGECONSTANT)) {
+        pageNo = 201;
+    }
+
+    // Draws instantly using background variable tracking
+    drawWifiIndicator(connectedWifiStrength, 240 - 30 - 5, 5, 20, bg_color);
+    drawBatteryIndicator(getBatteryLevel(), 240 - 30 - 5 - 30, 5, 20, bg_color);
+}
