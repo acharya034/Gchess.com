@@ -26,3 +26,8 @@ TFTSlider slider4(tft);
 
 
 void tftInput(bool pressed, uint8_t x, uint8_t y);
+
+void drawWifiIndicator(uint8_t signalStrength, int8_t x, int8_t y, uint8_t size, uint16_t bg_color = TFT_BLACK);
+
+void drawBatteryIndicator(uint8_t batteryLevel, int8_t x, int8_t y, uint8_t size, uint16_t bg_color = TFT_BLACK);
+
