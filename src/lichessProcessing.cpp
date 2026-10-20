@@ -688,7 +688,37 @@ bool getEvent() {
         return false;
     }
 
-    return true;
+    // action part. find the type key and do the task accordingly. 
+    // first try at first branch.
+    const char* type = eventDoc["type"] | "";
+
+    if (strcmp(type, "gameFull") == 0) {
+        // Initialize the game
+    }
+    else if (strcmp(type, "gameState") == 0) {
+        // Compare moves, update clocks and status
+    }
+    else if (strcmp(type, "opponentGone") == 0) {
+        // Update opponent presence
+    }
+    else if (strcmp(type, "chatLine") == 0) {
+        // Optionally display chat
+    }
+    else if (strcmp(type, "challenge") == 0) {
+        // Handle a challenge
+    }
+    else if (strcmp(type, "challengeCanceled") == 0) {
+        // Clear canceled challenge
+    }
+    else if (strcmp(type, "challengeDeclined") == 0) {
+        // Handle declined challenge
+    }
+    else if (strcmp(type, "gameStart") == 0) {
+        // Save game ID and start game stream
+    }
+    else if (strcmp(type, "gameFinish") == 0) {
+        // Display result and return to menu
+    }
 }
 
 // --------------------------------------------------
@@ -700,7 +730,7 @@ bool lichessSendRequest() {
     if (currentRT == NONE) return false;
 
     lichessRequest(NONE); // this should be done so that even if there is any error it would not send the request in a loop and load the server.
-    
+
     switch (currentRT) {
         case CHALLENGE: return createChallenge();
 
