@@ -4,4 +4,4 @@
 // board[x][y][0] = piece type/color
 char board[8][8][2];
 
-bool calculateMoveOptions(int selectedRow, int selectedCol);
+bool calculateMove(int selectedRow, int selectedCol);

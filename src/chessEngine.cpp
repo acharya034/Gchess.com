@@ -80,7 +80,7 @@ inline void traceMoves(
 }
 
 // Calculate movement options for the selected piece.
-inline bool calculateMoveOptions(int selectedRow, int selectedCol) {
+inline bool calculateMove(int selectedRow, int selectedCol) {
     if (!insideBoard(selectedRow, selectedCol)) {
         return false;
     }
