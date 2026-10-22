@@ -186,7 +186,12 @@ bool touchContained(uint16_t touchX, uint16_t touchY, int32_t x, int32_t y, int3
 }
 
 uint8_t getBatteryLevel() {
-    return 3; // Template placeholder
+    static uint8_t batteryLevel = 0;
+    static unsigned long batteryCheckTimmer = 0;
+    if (millis() - batteryCheckTimmer < 10000) return batteryLevel;
+    // TODO:
+    // find battery level here.
+    return 3; // temp
 }
 
 void drawWifiIndicator(uint8_t strength, int32_t x, int32_t y, uint8_t size, int32_t bg_color) {

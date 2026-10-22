@@ -5,7 +5,7 @@
 
 
 void page0(bool pressed, uint8_t x, uint8_t y){
-    tft.fillScreen(TFT_CYAN);
+    sprite.fillScreen(TFT_CYAN);
     // drawLogo()
 }
 

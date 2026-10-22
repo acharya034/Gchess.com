@@ -1,6 +1,7 @@
 #pragma once
 #include <Arduino.h>
 #include <FastLED.h>
+#include <chessEngine.h>
 
 // Pins constants
 const int hallpin[3][4] = {
@@ -9,10 +10,7 @@ const int hallpin[3][4] = {
   {35, 34, 39, 36}  // Hall sensor data pins
 };
 
-// Board state tracking
-// board[x][y][0] = piece type/color
-// board[x][y][1] = square state (s/S = selected, o/O = options, c/C = check, n/N = normal, t/T = takeable)
-char board[8][8][2];
+extern char board[8][8][2];
 
 // LED setup configuration
 const int ledPin = 1;       // Pin connected to the LED data line

@@ -47,35 +47,47 @@ void physicalLed() {
 
             CRGB color;
 
-            switch (board[i][j][1]) {
-
-                case 's':  // Black selected
-                case 'S':  // White selected
-                    color = CRGB::Yellow;
+            switch (board[i][j][1]) {                
+                // ================= SELECTED STATES =================
+                case 's': // Black / Dark Selected
+                    color = CRGB(184, 220, 40);   // Matches board_darkSelectedColor (0xBDE5)
+                    break;
+                case 'S': // White / Light Selected
+                    color = CRGB(216, 206, 160);  // Matches board_lightSelectedColor (0xD674)
                     break;
 
-                case 'o':  // Black move option
-                case 'O':  // White move option
-                    color = CRGB::Green;
+                // ================= MOVE OPTION STATES =================
+                case 'o': // Black / Dark Move Option
+                    color = CRGB(72, 157, 72);    // Matches board_darkOptionColor (0x4CE9)
+                    break;
+                case 'O': // White / Light Move Option
+                    color = CRGB(112, 201, 104);  // Matches board_lightOptionColor (0x764D)
                     break;
 
-                case 'c':  // Black in check
-                case 'C':  // White in check
-                    color = CRGB::Red;
+                // ================= CHECK STATES =================
+                case 'c': // Black / Dark King in Check
+                    color = CRGB(192, 40, 32);    // Matches board_darkCheckColor (0xC204)
+                    break;
+                case 'C': // White / Light King in Check
+                    color = CRGB(240, 124, 48);   // Matches board_lightCheckColor (0xF3E6)
                     break;
 
-                case 't':  // Black capture available
-                case 'T':  // White capture available
-                    color = CRGB::Orange;
+                // ================= CAPTURE STATES =================
+                case 't': // Black / Dark Capture Available
+                    color = CRGB(208, 148, 0);    // Matches board_darkTakeableColor (0xD4A0)
+                    break;
+                case 'T': // White / Light Capture Available
+                    color = CRGB(224, 176, 48);   // Matches board_lightTakeableColor (0xE586)
                     break;
 
-                case 'n':  // Normal square
-                case 'N':
-                default:   // Unknown or empty state
-                    color = CRGB::Black;
+                // ================= NORMAL / OFF STATES =================
+                case 'n': // Normal square -> LED Off
+                case 'N': // Normal square -> LED Off
+                default:  // Catch-all for empty or unknown states
+                    color = CRGB::Black; 
                     break;
             }
-
+            
             leds[ledIndex] = color;
         }
     }
@@ -88,3 +100,8 @@ void setBoardLedBrightness(uint8_t brightness) {
   FastLED.setBrightness(brightness);
   FastLED.show();
 }
+
+
+// function to read the board (call this function in loop)
+
+bool scanPhysicalBoard(int &rowIndex, int &colIndex);
