@@ -80,7 +80,7 @@ inline void traceMoves(
 }
 
 // Calculate movement options for the selected piece.
-inline bool calculateMove(int selectedRow, int selectedCol) {
+bool calculateMove(int selectedRow, int selectedCol) {
     if (!insideBoard(selectedRow, selectedCol)) {
         return false;
     }
@@ -218,6 +218,367 @@ inline bool calculateMove(int selectedRow, int selectedCol) {
             board[r][c][1] = ((r + c) % 2 == 0) ? 'n' : 'N';
             return false;
     }
+
+    return true;
+}
+
+bool isSquareAttacked(int tr, int tc, bool byWhite) {
+    // Pawn attacks
+    int pawnRow = tr + (byWhite ? 1 : -1);
+
+    for (int dc = -1; dc <= 1; dc += 2) {
+        int c = tc + dc;
+
+        if (insideBoard(pawnRow, c) &&
+            board[pawnRow][c][0] == (byWhite ? 'P' : 'p')) {
+            return true;
+        }
+    }
+
+    // Knight attacks
+    const int knightMoves[8][2] = {
+        {-2,-1}, {-2,1}, {-1,-2}, {-1,2},
+        {1,-2}, {1,2}, {2,-1}, {2,1}
+    };
+
+    for (int i = 0; i < 8; i++) {
+        int r = tr + knightMoves[i][0];
+        int c = tc + knightMoves[i][1];
+
+        if (insideBoard(r, c) &&
+            board[r][c][0] == (byWhite ? 'N' : 'n')) {
+            return true;
+        }
+    }
+
+    // Enemy king attacks adjacent squares
+    for (int dr = -1; dr <= 1; dr++) {
+        for (int dc = -1; dc <= 1; dc++) {
+            if (dr == 0 && dc == 0) continue;
+
+            int r = tr + dr;
+            int c = tc + dc;
+
+            if (insideBoard(r, c) &&
+                board[r][c][0] == (byWhite ? 'K' : 'k')) {
+                return true;
+            }
+        }
+    }
+
+    // Rook, bishop and queen attacks
+    const int dirs[8][2] = {
+        {-1,0}, {1,0}, {0,-1}, {0,1},
+        {-1,-1}, {-1,1}, {1,-1}, {1,1}
+    };
+
+    for (int d = 0; d < 8; d++) {
+        int r = tr + dirs[d][0];
+        int c = tc + dirs[d][1];
+
+        while (insideBoard(r, c)) {
+            char p = board[r][c][0];
+
+            if (!isEmptySquare(p)) {
+                if (isWhitePiece(p) == byWhite) {
+                    char type = toupper(p);
+
+                    if (type == 'Q' ||
+                        (d < 4 && type == 'R') ||
+                        (d >= 4 && type == 'B')) {
+                        return true;
+                    }
+                }
+
+                // A piece blocks attacks beyond it.
+                break;
+            }
+
+            r += dirs[d][0];
+            c += dirs[d][1];
+        }
+    }
+
+    return false;
+}
+
+bool loadFEN(String fen) {
+    int row = 0, col = 0;
+    int pos = 0;
+
+    // Parse piece placement.
+    while (pos < fen.length() && fen[pos] != ' ') {
+        char ch = fen[pos++];
+
+        if (ch == '/') {
+            if (col != 8 || row >= 7) return false;
+            row++;
+            col = 0;
+        }
+        else if (ch >= '1' && ch <= '8') {
+            int count = ch - '0';
+            if (col + count > 8) return false;
+
+            while (count--) {
+                board[row][col][0] = '.';
+                board[row][col][1] =
+                    ((row + col) % 2 == 0) ? 'n' : 'N';
+                col++;
+            }
+        }
+        else {
+            if (col >= 8 ||
+                String("pnbrqkPNBRQK").indexOf(ch) < 0) {
+                return false;
+            }
+
+            board[row][col][0] = ch;
+            board[row][col][1] =
+                ((row + col) % 2 == 0) ? 'n' : 'N';
+            col++;
+        }
+    }
+
+    if (row != 7 || col != 8 || pos >= fen.length()) return false;
+
+    // Side to move.
+    while (pos < fen.length() && fen[pos] == ' ') pos++;
+    if (pos >= fen.length()) return false;
+
+    sideToMove = fen[pos++];
+    if (sideToMove != 'w' && sideToMove != 'b') return false;
+
+    // Castling rights.
+    while (pos < fen.length() && fen[pos] == ' ') pos++;
+    if (pos >= fen.length()) return false;
+
+    castleRights = 0;
+
+    if (fen[pos] == '-') {
+        pos++;
+    } else {
+        while (pos < fen.length() && fen[pos] != ' ') {
+            switch (fen[pos++]) {
+                case 'K': castleRights |= 0x01; break;
+                case 'Q': castleRights |= 0x02; break;
+                case 'k': castleRights |= 0x04; break;
+                case 'q': castleRights |= 0x08; break;
+                default: return false;
+            }
+        }
+    }
+
+    // En passant target square.
+    while (pos < fen.length() && fen[pos] == ' ') pos++;
+    if (pos >= fen.length()) return false;
+
+    enPassant = '-';
+    enPassantRank = '0';
+
+    if (fen[pos] == '-') {
+        pos++;
+    } else {
+        if (pos + 1 >= fen.length()) return false;
+
+        char file = fen[pos++];
+        char rank = fen[pos++];
+
+        if (file < 'a' || file > 'h' ||
+            (rank != '3' && rank != '6')) {
+            return false;
+        }
+
+        enPassant = file;
+        enPassantRank = rank;
+    }
+
+    return true;
+}
+
+inline void setNormalSquare(int r, int c) {
+    board[r][c][1] = ((r + c) % 2 == 0) ? 'n' : 'N';
+}
+
+bool engineMove(String move) {
+    move.trim();
+
+    // UCI: e2e4, e7e8q, etc.
+    if (move.length() != 4 && move.length() != 5)
+        return false;
+
+    int fc = move[0] - 'a';
+    int fr = 8 - (move[1] - '0');
+    int tc = move[2] - 'a';
+    int tr = 8 - (move[3] - '0');
+
+    if (!insideBoard(fr, fc) || !insideBoard(tr, tc))
+        return false;
+
+    char piece = board[fr][fc][0];
+    char target = board[tr][tc][0];
+
+    if (isEmptySquare(piece)) return false;
+
+    bool white = isWhitePiece(piece);
+
+    // Enforce side to move.
+    if (white != (sideToMove == 'w')) return false;
+
+    // Cannot capture own piece.
+    if (!isEmptySquare(target) &&
+        isWhitePiece(target) == white) {
+        return false;
+    }
+
+    char type = toupper(piece);
+    bool isPawn = type == 'P';
+    bool isKing = type == 'K';
+
+    // Promotion character, if supplied.
+    char promotion = 0;
+
+    if (move.length() == 5) {
+        promotion = move[4];
+
+        if (promotion >= 'A' && promotion <= 'Z')
+            promotion += 'a' - 'A';
+
+        if (String("qrbn").indexOf(promotion) < 0)
+            return false;
+
+        if (!isPawn || tr != (white ? 0 : 7))
+            return false;
+    }
+
+    // A pawn reaching the last rank must promote.
+    if (isPawn && tr == (white ? 0 : 7) && !promotion)
+        return false;
+
+    int dr = tr - fr;
+    int dc = tc - fc;
+    int dir = white ? -1 : 1;
+
+    // Detect special moves.
+    bool castle = isKing && fr == tr && abs(dc) == 2;
+
+    bool enPassantCapture =
+        isPawn &&
+        abs(dc) == 1 &&
+        dr == dir &&
+        isEmptySquare(target) &&
+        move[2] == enPassant &&
+        move[3] == enPassantRank;
+
+    // Validate the en passant victim before changing anything.
+    int epCapturedRow = tr - dir;
+
+    if (enPassantCapture) {
+        if (board[epCapturedRow][tc][0] != (white ? 'p' : 'P'))
+            return false;
+    }
+
+    // Validate castling rights and rook position.
+    int homeRow = white ? 7 : 0;
+    int rookFromCol = dc > 0 ? 7 : 0;
+    int rookToCol = dc > 0 ? 5 : 3;
+    char rook = white ? 'R' : 'r';
+
+    if (castle) {
+        char right = dc > 0
+            ? (white ? 0x01 : 0x04)
+            : (white ? 0x02 : 0x08);
+
+        if (fr != homeRow || fc != 4 ||
+            !(castleRights & right) ||
+            board[homeRow][rookFromCol][0] != rook) {
+            return false;
+        }
+
+        int step = dc > 0 ? 1 : -1;
+
+        for (int c = fc + step; c != rookFromCol; c += step) {
+            if (!isEmptySquare(board[homeRow][c][0]))
+                return false;
+        }
+
+        // King cannot castle out of, through, or into check.
+        for (int c = fc; ; c += step) {
+            if (isSquareAttacked(homeRow, c, !white))
+                return false;
+
+            if (c == tc) break;
+        }
+    }
+
+    // Save the captured piece before moving.
+    char captured = enPassantCapture
+        ? board[epCapturedRow][tc][0]
+        : target;
+
+    // Update castling rights when a king moves.
+    if (piece == 'K') castleRights &= ~0x03;
+    if (piece == 'k') castleRights &= ~0x0C;
+
+    // Update rights when a rook moves from its original square.
+    if (piece == 'R' && fr == 7 && fc == 0)
+        castleRights &= ~0x02;
+    if (piece == 'R' && fr == 7 && fc == 7)
+        castleRights &= ~0x01;
+    if (piece == 'r' && fr == 0 && fc == 0)
+        castleRights &= ~0x08;
+    if (piece == 'r' && fr == 0 && fc == 7)
+        castleRights &= ~0x04;
+
+    // Capturing a rook on its original square removes its rights.
+    if (captured == 'R' && tr == 7 && tc == 0)
+        castleRights &= ~0x02;
+    if (captured == 'R' && tr == 7 && tc == 7)
+        castleRights &= ~0x01;
+    if (captured == 'r' && tr == 0 && tc == 0)
+        castleRights &= ~0x08;
+    if (captured == 'r' && tr == 0 && tc == 7)
+        castleRights &= ~0x04;
+
+    // En passant expires after this move.
+    enPassant = '-';
+    enPassantRank = '0';
+
+    // Remove source piece.
+    board[fr][fc][0] = '.';
+
+    // Remove the captured pawn for en passant.
+    if (enPassantCapture)
+        board[epCapturedRow][tc][0] = '.';
+
+    // Place the moving piece, promoting if necessary.
+    if (promotion) {
+        board[tr][tc][0] = white
+            ? toupper(promotion)
+            : promotion;
+    } else {
+        board[tr][tc][0] = piece;
+    }
+
+    // Move the rook during castling.
+    if (castle) {
+        board[homeRow][rookToCol][0] = rook;
+        board[homeRow][rookFromCol][0] = '.';
+    }
+
+    // Record the en passant target after a two-square pawn move.
+    if (isPawn && abs(dr) == 2) {
+        enPassant = move[0];
+        enPassantRank = '0' + (8 - ((fr + tr) / 2));
+    }
+
+    // Restore display states to normal.
+    for (int r = 0; r < 8; r++) {
+        for (int c = 0; c < 8; c++)
+            setNormalSquare(r, c);
+    }
+
+    // Switch side to move.
+    sideToMove = white ? 'b' : 'w';
 
     return true;
 }
