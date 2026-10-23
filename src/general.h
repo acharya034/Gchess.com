@@ -45,7 +45,7 @@ uint8_t getBatteryLevel();
 void drawWifiIndicator(uint8_t strength, int32_t x, int32_t y, uint8_t size, int32_t bg_color = TFT_BLACK);
 void drawBatteryIndicator(uint8_t strength, int32_t x, int32_t y, uint8_t size, int32_t bg_color = TFT_BLACK);
 void drawbackbutton(int32_t x, int32_t y, int32_t width, int32_t height, uint16_t &touchX, uint16_t &touchY, uint16_t color, uint16_t bg_color);
-void drawToolbar(uint16_t &touchX, uint16_t &touchY, uint16_t bg_color = TFT_BLACK, bool printBackground = true, bool backButton = true, bool settingButton = true, bool wifiIcon = true, bool batteryIcon = true);
+void drawToolbar(uint16_t &touchX, uint16_t &touchY, String text = "", uint16_t bg_color = TFT_BLACK, bool printBackground = true, bool backButton = true, bool settingButton = true, bool wifiIcon = true, bool batteryIcon = true);
 
 // QR Code APIs
 #define QR_MAX_BUFFER_SIZE 1024
