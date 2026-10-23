@@ -477,15 +477,20 @@ uint16_t getAccountRating() {
     return account.rating;
 }
 
-bool getAccountToken(String& token) {
+String getAccountToken(){
     LichessAccount account;
-    if (!lockAccounts()) return false;
+    if (!lockAccounts()) return "";
     const uint8_t index = selectedIndex;
     const bool authenticated = selectedAccountAuthenticated;
     unlockAccounts();
-    if (index == 0 || !authenticated || !getLichessToken(index, account)) return false;
-    token = account.token;
-    return true;
+    if (index == 0 || !authenticated || !getLichessToken(index, account)) return "";
+    return account.token;
+}
+
+bool getAccountToken(String& token) {
+    token = getAccountToken();
+    if (token.length() > 0) return true;
+    return false;
 }
 
 bool updateAccountRating(uint16_t rating) {

@@ -35,6 +35,7 @@ void deselectAccount();
 String getAccountUsername();
 uint16_t getAccountRating();
 bool getAccountToken(String& token);
+String getAccountToken();
 
 // Returns true if the stored value was already equal or was successfully updated.
 bool updateAccountRating(uint16_t rating);
