@@ -293,10 +293,10 @@ bool challengeAI() {
 
     String values[] = {
         String(constrain(aiLevel, 1, 8)),
-        String(aiClockLimit),
-        String(aiClockIncrement),
+        String(challengeClockLimit),
+        String(challengeClockIncrement),
         challengeVariant,
-        aiColor
+        challengeColor
     };
 
     String body = makeForm(keys, values, 5);
@@ -358,10 +358,10 @@ bool startSeek() {
 
     String values[] = {
         seekRated ? "true" : "false",
-        String(seekTime),
-        String(seekIncrement),
+        String(challengeClockLimit),
+        String(challengeClockIncrement),
         challengeVariant,
-        seekColor
+        challengeColor
     };
 
     String body = makeForm(keys, values, 5);

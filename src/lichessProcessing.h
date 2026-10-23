@@ -25,11 +25,7 @@ JsonDocument requestDoc;
 JsonDocument chatDoc;
 JsonDocument accountDoc[3];
 
-String lichessToken;
-
-String selfUsername;
 String opponentUsername;
-String accountUsername;
 
 String challengeId;
 
@@ -41,16 +37,9 @@ String challengeFen = "";
 String challengeColor = "random";
 
 uint8_t aiLevel = 1;
-String aiColor = "random";
-uint16_t aiClockLimit = 300;
-uint16_t aiClockIncrement = 1;
 
 String move;
 
-bool seekRated = false;
-uint16_t seekTime = 300;
-uint16_t seekIncrement = 1;
-String seekColor = "random";
 String seekRatingRange = "";
 
 String chatMessage;
