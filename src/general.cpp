@@ -304,3 +304,96 @@ void drawToolbar(uint16_t &touchX, uint16_t &touchY, uint16_t bg_color) {
     drawWifiIndicator(connectedWifiStrength, 240 - 30 - 5, 5, 20, bg_color);
     drawBatteryIndicator(getBatteryLevel(), 240 - 30 - 5 - 30, 5, 20, bg_color);
 }
+
+// Generate the QR matrix and store it in QRCodeData
+bool generateQRCode(
+    QRCodeData &code,
+    const char *text,
+    uint8_t version,
+    uint8_t ecc
+) {
+    if (text == nullptr || version == 0) {
+        code.valid = false;
+        return false;
+    }
+
+    int requiredSize = qrcode_getBufferSize(version);
+
+    if (requiredSize <= 0 ||
+        requiredSize > QR_MAX_BUFFER_SIZE) {
+        code.valid = false;
+        return false;
+    }
+
+    qrcode_initText(
+        &code.qr,
+        code.buffer,
+        version,
+        ecc,
+        text
+    );
+
+    code.valid = true;
+    return true;
+}
+
+
+// Draw the previously generated QR code
+bool printQRCode(
+    QRCodeData &code,
+    int16_t x,
+    int16_t y,
+    int16_t width,
+    bool printLogo,
+    uint16_t backgroundColor,
+    uint16_t codeColor
+) {
+    if (!code.valid || width <= 0) {
+        return false;
+    }
+
+    int moduleSize = width / code.qr.size;
+
+    if (moduleSize < 1) {
+        return false;
+    }
+
+    // Center the QR matrix inside the requested area
+    int qrWidth = code.qr.size * moduleSize;
+    int offset = (width - qrWidth) / 2;
+
+    int16_t startX = x + offset;
+    int16_t startY = y + offset;
+
+    // Draw the background
+    sprite.fillRect(
+        x, y, width, width,
+        backgroundColor
+    );
+
+    // Draw the QR modules
+    for (uint8_t row = 0; row < code.qr.size; row++) {
+        for (uint8_t col = 0; col < code.qr.size; col++) {
+            if (qrcode_getModule(&code.qr, col, row)) {
+                sprite.fillRect(
+                    startX + col * moduleSize,
+                    startY + row * moduleSize,
+                    moduleSize,
+                    moduleSize,
+                    codeColor
+                );
+            }
+        }
+    }
+
+    if (printLogo){
+      // Print logo at the center
+      x += width / 2;
+      y += width / 2;
+      int16_t radius = width / 8;
+
+      sprite.fillSmoothCircle(x, y, radius, backgroundColor, codeColor);
+    }
+
+    return true;
+}

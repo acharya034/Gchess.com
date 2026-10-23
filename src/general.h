@@ -8,6 +8,7 @@
 #include <WiFiMulti.h>
 #include <Preferences.h>
 #include <TFT_eSPI.h>
+#include <qrcode.h>
 #include <TFTInput.h>
 #include <pages.h>
 
@@ -45,5 +46,33 @@ void drawWifiIndicator(uint8_t strength, int32_t x, int32_t y, uint8_t size, int
 void drawBatteryIndicator(uint8_t strength, int32_t x, int32_t y, uint8_t size, int32_t bg_color = TFT_BLACK);
 void drawbackbutton(int32_t x, int32_t y, int32_t width, int32_t height, uint16_t &touchX, uint16_t &touchY, uint16_t color, uint16_t bg_color);
 void drawToolbar(uint16_t &touchX, uint16_t &touchY, uint16_t bg_color = TFT_BLACK);
+
+// QR Code APIs
+#define QR_MAX_BUFFER_SIZE 1024
+
+struct QRCodeData {
+    QRCode qr;
+    uint8_t buffer[QR_MAX_BUFFER_SIZE];
+    bool valid = false;
+};
+
+// Generate and store the QR matrix
+bool generateQRCode(
+    QRCodeData &code,
+    const char *text,
+    uint8_t version = 4,
+    uint8_t ecc = 1
+);
+
+// Draw a previously generated QR code
+bool printQRCode(
+    QRCodeData &code,
+    int16_t x,
+    int16_t y,
+    int16_t width,
+    bool printLogo = false,
+    uint16_t backgroundColor = TFT_WHITE,
+    uint16_t codeColor = TFT_BLACK
+);
 
 #endif // GENERAL_H
