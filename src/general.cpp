@@ -303,6 +303,7 @@ void drawToolbar(uint16_t &touchX, uint16_t &touchY, String text, uint16_t bg_co
         
         // 1. Set the text datum on the sprite (e.g., Middle-Center)
         sprite.setTextDatum(ML_DATUM); 
+        sprite.setTextSize(2);
         
         // 2. Draw the text. 
         sprite.drawString(text, 32, 45); 
