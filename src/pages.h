@@ -21,14 +21,31 @@ rules while making pages:
         101-200 -> all pages that has more then one calling point.
         201-255 -> all setting pages that can be called from any where.
 */
+/* page details:
+    0: intro page
+    1: home page
+    2: puzzle page
+    3: game page
+    4: progress page
+    5: setting page
+    6: play page
+    7: ai play setting
+    8: random play setting
+    9: friend play setting
+    10: open play setting
+    
 
-void page0(uint16_t touchX, uint16_t touchY); // intro page
-void page1(uint16_t touchX, uint16_t touchY); // home page
-void page2(uint16_t touchX, uint16_t touchY); // puzzle page
-void page3(uint16_t touchX, uint16_t touchY); // Game page
-void page4(uint16_t touchX, uint16_t touchY); // Progress page
-void page5(uint16_t touchX, uint16_t touchY); // Setting page
-void page6(uint16_t touchX, uint16_t touchY); // play page
+*/
+
+// todo: those defination just takes flask memory space the better apporach is to get the index and generate a function name.
+
+void page0(uint16_t touchX, uint16_t touchY);
+void page1(uint16_t touchX, uint16_t touchY);
+void page2(uint16_t touchX, uint16_t touchY);
+void page3(uint16_t touchX, uint16_t touchY);
+void page4(uint16_t touchX, uint16_t touchY);
+void page5(uint16_t touchX, uint16_t touchY);
+void page6(uint16_t touchX, uint16_t touchY);
 void page7(uint16_t touchX, uint16_t touchY); 
 void page8(uint16_t touchX, uint16_t touchY);
 void page9(uint16_t touchX, uint16_t touchY);
