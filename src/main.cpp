@@ -4,6 +4,7 @@
 #include <ArduinoJson.h>
 
 #include <physicalBoard.h>
+#include <lichessAccount.h>
 #include <general.h>
 #include <pages.h>
 
@@ -34,8 +35,8 @@ const int hallpin[3][4] = {
 
 // one time function
 void setup() {
-  
-  
+  beginLichessAccounts();
+
   for (int i = 0; i < 3; i++){
     for (int j = 0; j < 4; j++){
       pinMode(hallpin[i][j], INPUT);
@@ -52,16 +53,14 @@ void loop() {
   
   physicalLed();
   // ==== the tft part here===
-  bool pressed = display.getTouch(&touchX, &touchY, constTouchZ);
-
-  tftInput(pressed, touchX, touchY);
+  display.getTouch(&touchX, &touchY, constTouchZ);
   
-  pages[pageNo](pressed, touchX, touchY);
+  pages[pageNo](touchX, touchY);
+
   
   calFPS(); 
   tft.pushSprite(0,0);
-  
-  pushPageHistory();
+
 }
 
 // core 0 loop for time consuming or freezing task.
