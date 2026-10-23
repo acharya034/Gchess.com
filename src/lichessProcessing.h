@@ -5,7 +5,6 @@
 #include <WiFiClientSecure.h>
 #include <ArduinoJson.h>
 
-
 // --------------------------------------------------
 // Global variables
 // --------------------------------------------------
@@ -78,7 +77,8 @@ enum requestType {
     CLAM_VICTORY,
     CHAT,
     GET_CHAT,
-    GET_ACCOUNT
+    GET_ACCOUNT,
+    AUTHENTICATION
 };
 
 extern requestType currentRT;

@@ -1,4 +1,6 @@
 #include "lichessProcessing.h"
+#include <general.h>
+#include <lichessAccount.h>
 
 // --------------------------------------------------
 // Queue management
@@ -770,6 +772,8 @@ bool lichessSendRequest() {
 
         case GET_ACCOUNT: return getAccountInfo();
 
+        case AUTHENTICATION: return runLichessPairing();
+        
         case NONE:
         default: return false;
     }

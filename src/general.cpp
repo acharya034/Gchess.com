@@ -287,10 +287,12 @@ void drawbackbutton(int32_t x, int32_t y, int32_t width, int32_t height, uint16_
                         color);
 }
 
-void drawToolbar(uint16_t &touchX, uint16_t &touchY, uint16_t bg_color) {
+void drawToolbar(uint16_t &touchX, uint16_t &touchY, uint16_t bg_color, bool printBackground, bool backButton, bool settingButton, bool wifiIcon, bool batteryIcon) {
     uint8_t TOOLPAGECONSTANT = 202;
     
-    drawbackbutton(0, 0, 30, 30, touchX, touchY, TFT_WHITE, bg_color);
+    if (printBackground) sprite.fillRect(0, 0, 240, 30, bg_color);
+
+    if (backButton) (0, 0, 30, 30, touchX, touchY, TFT_WHITE, bg_color);
 
     if (touchContained(touchX, touchY, 30, 0, 30, 210)) {
         buttonPressed(TOOLPAGECONSTANT);
@@ -301,8 +303,8 @@ void drawToolbar(uint16_t &touchX, uint16_t &touchY, uint16_t bg_color) {
     }
 
     // Draws instantly using background variable tracking
-    drawWifiIndicator(connectedWifiStrength, 240 - 30 - 5, 5, 20, bg_color);
-    drawBatteryIndicator(getBatteryLevel(), 240 - 30 - 5 - 30, 5, 20, bg_color);
+    if (wifiIcon) drawWifiIndicator(connectedWifiStrength, 240 - 30 - 5, 5, 20, bg_color);
+    if (batteryIcon) drawBatteryIndicator(getBatteryLevel(), 240 - 30 - 5 - 30, 5, 20, bg_color);
 }
 
 // Generate the QR matrix and store it in QRCodeData
