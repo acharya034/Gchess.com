@@ -7,11 +7,9 @@ unsigned long buttonReleasedStartTime = 0;
 
 WiFiMulti wifiMulti;
 Preferences preferences;
-TFT_eSPI display = TFT_eSPI();
-TFT_eSprite sprite = TFT_eSprite(&display);
+extern TFT_eSprite sprite;
 
-const char* default_ssid = "Gchess";
-const char* default_password = "Gchess@123";
+uint16_t constTouchZ = 600; // this is default value;
 
 // Local internal setup function to populate WiFiMulti on boot with infinite storage keys
 void initWifiManager() {
@@ -36,12 +34,12 @@ void initWifiManager() {
 
 // Single non-blocking engine running inside main loop() updating the global integer
 void maintainWifiConnection() {
+  wifiMulti.run();
   static unsigned long lastCheckTime = 0;
-  if (millis() - lastCheckTime < 3000) return; 
+  if (millis() - lastCheckTime < 3000 && connectedWifiStrength != 0) return; 
   lastCheckTime = millis();
 
   // Run the background connection handling engine
-  wifiMulti.run();
 
   // Dynamically calculate the active link's strength for your global toolbar variable
   if (WiFi.status() == WL_CONNECTED) {
@@ -199,8 +197,7 @@ void drawWifiIndicator(uint8_t strength, int32_t x, int32_t y, uint8_t size, int
     if (scaledSize == 0) scaledSize = 1;
 
     uint16_t active   = TFT_WHITE;
-    uint16_t inactive = 0x8A795D;
-
+    uint16_t inactive = sprite.color565(138, 121, 93);
     int cx = x + scaledSize / 2;
     int cy = y + scaledSize - scaledSize / 8;
     int r  = scaledSize / 2;
@@ -314,7 +311,7 @@ void drawToolbar(uint16_t &touchX, uint16_t &touchY, String text, uint16_t bg_co
     }
 
     if (isButtonReleased(TOOLPAGECONSTANT)) {
-        pageNo = 201;
+        updatePage(200);
     }
 
     // Draws instantly using background variable tracking

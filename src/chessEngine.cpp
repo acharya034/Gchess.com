@@ -1,5 +1,11 @@
 #include "chessEngine.h"
+#include <lichessProcessing.h>
 
+int8_t selectedSq = 99;
+
+char enPassant = '-';  // '-' means unavailable; otherwise file 'a'–'h'
+char enPassantRank = '0'; // Target rank '3' or '6'
+char sideToMove = 'w';
 
 // Empty-square check
 inline bool isEmptySquare(char p) {
@@ -85,121 +91,74 @@ bool calculateMove(int selectedRow, int selectedCol) {
         return false;
     }
 
-    char piece = board[selectedRow][selectedCol][0];
+    
+    if (selectedSq > 77){
+        char piece = board[selectedRow][selectedCol][0];
 
-    if (isEmptySquare(piece)) {
-        return false;
-    }
+        if (isEmptySquare(piece)) {
+            return false;
+        }
 
-    clearMoveOptions();
+        clearMoveOptions();
 
-    bool white = isWhitePiece(piece);
-    int r = selectedRow;
-    int c = selectedCol;
+        bool white = isWhitePiece(piece);
+        int r = selectedRow;
+        int c = selectedCol;
 
-    // Mark the selected piece.
-    board[r][c][1] = white ? 'S' : 's';
+        // Mark the selected piece.
+        board[r][c][1] = white ? 'S' : 's';
 
-    switch (piece >= 'A' && piece <= 'Z' ? piece : piece - 'a' + 'A') {
+        switch (piece >= 'A' && piece <= 'Z' ? piece : piece - 'a' + 'A') {
 
-        // PAWN
-        case 'P': {
-            int dir = white ? -1 : 1;
-            int startRow = white ? 6 : 1;
+            // PAWN
+            case 'P': {
+                int dir = white ? -1 : 1;
+                int startRow = white ? 6 : 1;
 
-            // One square forward.
-            int nr = r + dir;
+                // One square forward.
+                int nr = r + dir;
 
-            if (insideBoard(nr, c) &&
-                isEmptySquare(board[nr][c][0])) {
+                if (insideBoard(nr, c) &&
+                    isEmptySquare(board[nr][c][0])) {
 
-                board[nr][c][1] = white ? 'O' : 'o';
+                    board[nr][c][1] = white ? 'O' : 'o';
 
-                // Two squares forward from starting position.
-                int nr2 = r + 2 * dir;
+                    // Two squares forward from starting position.
+                    int nr2 = r + 2 * dir;
 
-                if (r == startRow &&
-                    isEmptySquare(board[nr2][c][0])) {
-                    board[nr2][c][1] = white ? 'O' : 'o';
+                    if (r == startRow &&
+                        isEmptySquare(board[nr2][c][0])) {
+                        board[nr2][c][1] = white ? 'O' : 'o';
+                    }
                 }
-            }
 
-            // Diagonal captures.
-            for (int dc = -1; dc <= 1; dc += 2) {
-                int nc = c + dc;
-                nr = r + dir;
-
-                if (!insideBoard(nr, nc)) continue;
-
-                char target = board[nr][nc][0];
-
-                if (!isEmptySquare(target) &&
-                    isWhitePiece(target) != white) {
-                    board[nr][nc][1] = white ? 'T' : 't';
-                }
-            }
-            break;
-        }
-
-        // KNIGHT
-        case 'N': {
-            const int moves[8][2] = {
-                {-2,-1}, {-2,1}, {-1,-2}, {-1,2},
-                { 1,-2}, { 1,2}, { 2,-1}, { 2,1}
-            };
-
-            for (int i = 0; i < 8; i++) {
-                int nr = r + moves[i][0];
-                int nc = c + moves[i][1];
-
-                if (!insideBoard(nr, nc)) continue;
-
-                char target = board[nr][nc][0];
-
-                if (isEmptySquare(target) ||
-                    isWhitePiece(target) != white) {
-                    addMoveOption(nr, nc, white);
-                }
-            }
-            break;
-        }
-
-        // BISHOP
-        case 'B': {
-            const int dirs[4][2] = {
-                {-1,-1}, {-1,1}, {1,-1}, {1,1}
-            };
-            traceMoves(r, c, white, dirs, 4);
-            break;
-        }
-
-        // ROOK
-        case 'R': {
-            const int dirs[4][2] = {
-                {-1,0}, {1,0}, {0,-1}, {0,1}
-            };
-            traceMoves(r, c, white, dirs, 4);
-            break;
-        }
-
-        // QUEEN
-        case 'Q': {
-            const int dirs[8][2] = {
-                {-1,-1}, {-1,1}, {1,-1}, {1,1},
-                {-1,0}, {1,0}, {0,-1}, {0,1}
-            };
-            traceMoves(r, c, white, dirs, 8);
-            break;
-        }
-
-        // KING
-        case 'K': {
-            for (int dr = -1; dr <= 1; dr++) {
-                for (int dc = -1; dc <= 1; dc++) {
-                    if (dr == 0 && dc == 0) continue;
-
-                    int nr = r + dr;
+                // Diagonal captures.
+                for (int dc = -1; dc <= 1; dc += 2) {
                     int nc = c + dc;
+                    nr = r + dir;
+
+                    if (!insideBoard(nr, nc)) continue;
+
+                    char target = board[nr][nc][0];
+
+                    if (!isEmptySquare(target) &&
+                        isWhitePiece(target) != white) {
+                        board[nr][nc][1] = white ? 'T' : 't';
+                    }
+                }
+                break;
+            }
+
+            // KNIGHT
+            case 'N': {
+                const int moves[8][2] = {
+                    {-2,-1}, {-2,1}, {-1,-2}, {-1,2},
+                    { 1,-2}, { 1,2}, { 2,-1}, { 2,1}
+                };
+
+                for (int i = 0; i < 8; i++) {
+                    int nr = r + moves[i][0];
+                    int nc = c + moves[i][1];
 
                     if (!insideBoard(nr, nc)) continue;
 
@@ -210,16 +169,89 @@ bool calculateMove(int selectedRow, int selectedCol) {
                         addMoveOption(nr, nc, white);
                     }
                 }
+                break;
             }
-            break;
+
+            // BISHOP
+            case 'B': {
+                const int dirs[4][2] = {
+                    {-1,-1}, {-1,1}, {1,-1}, {1,1}
+                };
+                traceMoves(r, c, white, dirs, 4);
+                break;
+            }
+
+            // ROOK
+            case 'R': {
+                const int dirs[4][2] = {
+                    {-1,0}, {1,0}, {0,-1}, {0,1}
+                };
+                traceMoves(r, c, white, dirs, 4);
+                break;
+            }
+
+            // QUEEN
+            case 'Q': {
+                const int dirs[8][2] = {
+                    {-1,-1}, {-1,1}, {1,-1}, {1,1},
+                    {-1,0}, {1,0}, {0,-1}, {0,1}
+                };
+                traceMoves(r, c, white, dirs, 8);
+                break;
+            }
+
+            // KING
+            case 'K': {
+                for (int dr = -1; dr <= 1; dr++) {
+                    for (int dc = -1; dc <= 1; dc++) {
+                        if (dr == 0 && dc == 0) continue;
+
+                        int nr = r + dr;
+                        int nc = c + dc;
+
+                        if (!insideBoard(nr, nc)) continue;
+
+                        char target = board[nr][nc][0];
+
+                        if (isEmptySquare(target) ||
+                            isWhitePiece(target) != white) {
+                            addMoveOption(nr, nc, white);
+                        }
+                    }
+                }
+                break;
+            }
+
+            default:
+                board[r][c][1] = ((r + c) % 2 == 0) ? 'n' : 'N';
+                return false;
         }
 
-        default:
-            board[r][c][1] = ((r + c) % 2 == 0) ? 'n' : 'N';
-            return false;
+        return true;
+    }
+    else {
+        // 1. Check if the target square is empty ('n' or 'N' for none)
+        char sqtype = board[selectedRow][selectedCol][1];
+        if (sqtype == 'n' || sqtype == 'N') return false;
+
+        // 2. Decode the starting coordinates
+        int8_t fromrow = selectedSq / 10;
+        int8_t fromcol = selectedSq % 10; 
+
+        // 3. Execute the move on the board array
+        board[selectedRow][selectedCol][0] = board[fromrow][fromcol][0]; 
+        board[fromrow][fromcol][0] = ' '; 
+
+        // 4. Construct the UCI move string (e.g., "e2e4") using Arduino String
+        String move = "";
+        move += (char)('a' + fromcol);
+        move += (char)('8' - fromrow); // Assuming row 0 is rank 8
+        move += (char)('a' + selectedCol);
+        move += (char)('8' - selectedRow);
+
+        return sendMove(move);
     }
 
-    return true;
 }
 
 bool isSquareAttacked(int tr, int tc, bool byWhite) {
@@ -581,4 +613,16 @@ bool engineMove(String move) {
     sideToMove = white ? 'b' : 'w';
 
     return true;
+}
+
+bool setSideToMove(const char* text){
+    if (strcmp(text, "white") == 0 || strcmp(text, "w") == 0){
+        sideToMove = 'w';
+        return true;
+    }
+    else if (strcmp(text, "black") == 0 || strcmp(text, "b") == 0) { 
+        sideToMove = 'b'; 
+        return true; 
+    }
+    return false;
 }

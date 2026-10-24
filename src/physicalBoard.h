@@ -2,6 +2,13 @@
 #include <Arduino.h>
 #include <FastLED.h>
 #include <chessEngine.h>
+#include <TFT_eSPI.h>
+
+// global variables.
+TFT_eSPI display = TFT_eSPI();
+
+TFT_eSprite tft = TFT_eSprite(&display); 
+
 
 // Pins constants
 const int hallpin[3][4] = {

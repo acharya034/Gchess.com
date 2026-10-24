@@ -2,15 +2,6 @@
 
 #include <Arduino.h>
 #include <TFT_eSPI.h>
-#include <chessEngine.h>
-
-// Declare the external display variable so the namespace functions can see it
-extern TFT_eSPI display = TFT_eSPI();
-extern TFT_eSprite sprite = TFT_eSprite(&display); 
-
-bool screen_rotated = false; // 1 false. 3 true
-
-extern char board[8][8][2];
 
 // Theme Customization Colors
 // 16-bit RGB565 Hex Codes for TFT_eSPI
@@ -36,7 +27,12 @@ uint16_t board_lightTakeableColor= 0xE586; // Muted Coral/Orange (Target piece c
 void tftDrawChessBoard(int32_t x, int32_t y, int32_t width);
 void drawPiece(int16_t x, int16_t y, uint16_t size, char p, uint16_t bg_color);
 
-
+bool isTftChessBoardTouch(
+    int16_t touchX, int16_t touchY,
+    int16_t board_x, int16_t board_y,
+    int16_t board_width,
+    uint8_t &a, uint8_t &b
+);
 
 
 // inline bool promotion(String& moveStr){
@@ -104,10 +100,3 @@ void drawPiece(int16_t x, int16_t y, uint16_t size, char p, uint16_t bg_color);
 //     }
 
 // }
-
-inline bool isTftChessBoardTouch(
-    int16_t touchX, int16_t touchY,
-    int16_t board_x, int16_t board_y,
-    int16_t board_width,
-    int16_t &a, int16_t &b
-);

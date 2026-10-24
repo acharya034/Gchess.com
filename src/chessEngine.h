@@ -12,10 +12,11 @@ char castleRights = 0x0F;
 // Bit 2: Black kingside
 // Bit 3: Black queenside
 
-char enPassant = '-';  // '-' means unavailable; otherwise file 'a'–'h'
-char enPassantRank = '0'; // Target rank '3' or '6'
-char sideToMove = 'w';
+extern char enPassant;  // '-' means unavailable; otherwise file 'a'–'h'
+extern char enPassantRank; // Target rank '3' or '6'
+extern char sideToMove;
 
 bool calculateMove(int selectedRow, int selectedCol);
 bool engineMove(String move);
 bool loadFEN(String fen);
+bool setSideToMove(const char* text);

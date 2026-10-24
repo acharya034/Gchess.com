@@ -19,6 +19,9 @@ struct WifiUIData {
   int data;       // (Status * 10) + Strength
 };
 
+extern uint16_t constTouchZ;
+
+
 // Global variables (Shared via extern linkages)
 extern int connectedWifiStrength; 
 extern uint8_t pressedButton;

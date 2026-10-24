@@ -1,5 +1,6 @@
 #include "physicalBoard.h"
 
+extern uint8_t rotation;
 // Initialize hardware pins and FastLED matrix
 void physicalBoardSetup() {
   // 1. Initialize FastLED with your specifications
@@ -9,10 +10,17 @@ void physicalBoardSetup() {
 
   // 2. Configure Hall sensor matrix pins using a loop
   for (int i = 0; i < 4; i++) {
-    pinMode(hallpin[0][i], OUTPUT); // Positive power lines
-    pinMode(hallpin[1][i], OUTPUT); // Negative ground lines
-    pinMode(hallpin[2][i], INPUT);  // Data read lines
+    for (int j = 0; j < 3; j++){
+        pinMode(hallpin[j][i], INPUT);
+    }
   }
+
+  // 3. Configure TFT screen and touch.
+    tft.init();
+    tft.setRotation(rotation);
+    
+    uint16_t calData[5] = { 426, 3465, 299, 3463, 7 };
+    tft.setTouch(calData); 
 }
 
 void scanPhyBoard(){

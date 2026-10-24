@@ -1,4 +1,9 @@
 #include "TFTChessBoard.h"
+#include <general.h>
+
+extern TFT_eSprite sprite;
+
+extern char board[8][8][2];
 
 void tftDrawChessBoard(int32_t x, int32_t y, int32_t width) {
     int32_t squareSize = width / 8;
@@ -10,11 +15,11 @@ void tftDrawChessBoard(int32_t x, int32_t y, int32_t width) {
 
             char state = board[i][j][1];
 
-            // Flip character case if rotated
-            if (screen_rotated) {
-                if (state >= 'a' && state <= 'z') state -= 32;
-                else if (state >= 'A' && state <= 'Z') state += 32;
-            }
+            // // Flip character case if rotated
+            // if (screen_rotated) {
+            //     if (state >= 'a' && state <= 'z') state -= 32;
+            //     else if (state >= 'A' && state <= 'Z') state += 32;
+            // }
 
             uint16_t color;
 
@@ -68,11 +73,11 @@ inline void drawPiece(int16_t x, int16_t y, uint16_t size, char p, uint16_t bg_c
     sprite.drawString(String((char)toupper(p)), centerX - 1, centerY + 3, 4);
 }
 
-inline bool isTftChessBoardTouch(
+bool isTftChessBoardTouch(
     int16_t touchX, int16_t touchY,
     int16_t board_x, int16_t board_y,
     int16_t board_width,
-    int16_t &a, int16_t &b
+    uint8_t &a, uint8_t &b
 ) {
     int16_t board_sqWidth = board_width / 8;
 

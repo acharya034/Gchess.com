@@ -1,6 +1,93 @@
 #include "lichessProcessing.h"
 #include <general.h>
 #include <lichessAccount.h>
+#include <chessEngine.h>
+
+// --------------------------------------------------
+// HTTP clients
+// --------------------------------------------------
+
+WiFiClientSecure eventClient;
+HTTPClient eventHttp;
+
+WiFiClientSecure requestClient;
+HTTPClient requestHttp;
+
+// --------------------------------------------------
+// Global game and JSON data
+// --------------------------------------------------
+
+String gameId;
+
+JsonDocument eventDoc;
+JsonDocument requestDoc;
+JsonDocument chatDoc;
+JsonDocument accountDoc[3];
+
+String opponentUsername;
+String selfUsername;
+String accountUsername;
+
+// --------------------------------------------------
+// Authentication
+// --------------------------------------------------
+
+// Define this here only if no other .cpp file defines it.
+String lichessToken;
+
+// --------------------------------------------------
+// Challenge settings
+// --------------------------------------------------
+
+String challengeId;
+
+bool challengeRated = false;
+uint16_t challengeClockLimit = 300;
+uint16_t challengeClockIncrement = 1;
+
+String challengeVariant = "standard";
+String challengeFen = "";
+String challengeColor = "random";
+
+// --------------------------------------------------
+// AI settings
+// --------------------------------------------------
+
+uint8_t aiLevel = 1;
+String aiColor = "random";
+uint16_t aiClockLimit = 300;
+uint16_t aiClockIncrement = 1;
+
+// --------------------------------------------------
+// Move
+// --------------------------------------------------
+
+String move;
+
+// --------------------------------------------------
+// Seek settings
+// --------------------------------------------------
+
+bool seekRated = false;
+uint16_t seekTime = 300;
+uint16_t seekIncrement = 1;
+
+String seekColor = "random";
+String seekRatingRange = "";
+
+// --------------------------------------------------
+// Chat settings
+// --------------------------------------------------
+
+String chatMessage;
+String chatRoom = "player";
+
+// --------------------------------------------------
+// Request queue
+// --------------------------------------------------
+
+requestType currentRT = NONE;
+requestType lastRT[2] = { NONE, NONE };
 
 // --------------------------------------------------
 // Queue management
@@ -313,12 +400,12 @@ bool challengeAI() {
     );
 
     if (ok) {
-        challengeId =
-            requestDoc["challenge"]["id"] |
-            requestDoc["id"] |
-            "";
+        gameId = requestDoc["id"] | "";
+        loadFEN(requestDoc["fen"]);
+        setSideToMove(requestDoc["player"]);
+        updatePage(101);
     }
-
+    
     return ok;
 }
 
@@ -343,6 +430,10 @@ bool sendMove() {
     );
 }
 
+bool sendMove(String givenmove) {
+    move = givenmove;
+    return sendMove();
+}
 // --------------------------------------------------
 // Start seeking a game
 // --------------------------------------------------
