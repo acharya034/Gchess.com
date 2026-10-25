@@ -19,11 +19,11 @@ struct WifiUIData {
   int data;       // (Status * 10) + Strength
 };
 
-extern uint16_t constTouchZ;
-
+extern TFT_eSprite sprite;
 
 // Global variables (Shared via extern linkages)
-extern int connectedWifiStrength; 
+// extern int connectedWifiStrength; 
+extern uint16_t constTouchZ;
 extern uint8_t pressedButton;
 extern unsigned long buttonReleasedStartTime;
 extern WiFiMulti wifiMulti;
@@ -51,11 +51,9 @@ void drawbackbutton(int32_t x, int32_t y, int32_t width, int32_t height, uint16_
 void drawToolbar(uint16_t &touchX, uint16_t &touchY, String text = "", uint16_t bg_color = TFT_BLACK, bool printBackground = true, bool backButton = true, bool settingButton = true, bool wifiIcon = true, bool batteryIcon = true);
 
 // QR Code APIs
-#define QR_MAX_BUFFER_SIZE 1024
-
 struct QRCodeData {
     QRCode qr;
-    uint8_t buffer[QR_MAX_BUFFER_SIZE];
+    uint8_t buffer[1024];
     bool valid = false;
 };
 

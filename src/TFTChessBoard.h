@@ -3,29 +3,8 @@
 #include <Arduino.h>
 #include <TFT_eSPI.h>
 
-// Theme Customization Colors
-// 16-bit RGB565 Hex Codes for TFT_eSPI
-uint16_t board_darkColor         = 0x9B84; // Walnut / Brownish Wood
-uint16_t board_lightColor        = 0xF7BE; // Maple / Light Tan Wood
-
-uint16_t board_darkPieceColor    = 0x2104; // Charcoal (Soft Deep Black)
-uint16_t board_lightPieceColor   = 0xFFDE; // Ivory White
-
-uint16_t board_darkSelectedColor = 0xBDE5; // Antique Pale Blue (Highlight dark square)
-uint16_t board_lightSelectedColor= 0xD674; // Lighter Pastel Blue (Highlight light square)
-
-uint16_t board_darkOptionColor   = 0x4CE9; // Muted Green dot/indicator for valid moves
-uint16_t board_lightOptionColor  = 0x764D; // Lighter Green dot/indicator for valid moves
-
-uint16_t board_darkCheckColor    = 0xC204; // Crimson Red (Alert state on dark square)
-uint16_t board_lightCheckColor   = 0xF3E6; // Pastel Soft Red (Alert state on light square)
-
-uint16_t board_darkTakeableColor = 0xD4A0; // Burnt Ochre/Orange (Target piece can be captured)
-uint16_t board_lightTakeableColor= 0xE586; // Muted Coral/Orange (Target piece can be captured)
-
 // --- Function Forward Declarations ---
 void tftDrawChessBoard(int32_t x, int32_t y, int32_t width);
-void drawPiece(int16_t x, int16_t y, uint16_t size, char p, uint16_t bg_color);
 
 bool isTftChessBoardTouch(
     int16_t touchX, int16_t touchY,

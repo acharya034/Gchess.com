@@ -1,4 +1,5 @@
 #include "lichessProcessing.h"
+#include "lichessGlobal.h"
 #include <general.h>
 #include <lichessAccount.h>
 #include <chessEngine.h>
@@ -54,9 +55,6 @@ String challengeColor = "random";
 // --------------------------------------------------
 
 uint8_t aiLevel = 1;
-String aiColor = "random";
-uint16_t aiClockLimit = 300;
-uint16_t aiClockIncrement = 1;
 
 // --------------------------------------------------
 // Move
@@ -68,11 +66,6 @@ String move;
 // Seek settings
 // --------------------------------------------------
 
-bool seekRated = false;
-uint16_t seekTime = 300;
-uint16_t seekIncrement = 1;
-
-String seekColor = "random";
 String seekRatingRange = "";
 
 // --------------------------------------------------
@@ -448,7 +441,7 @@ bool startSeek() {
     };
 
     String values[] = {
-        seekRated ? "true" : "false",
+        challengeRated ? "true" : "false",
         String(challengeClockLimit),
         String(challengeClockIncrement),
         challengeVariant,
@@ -812,6 +805,7 @@ bool getEvent() {
     else if (strcmp(type, "gameFinish") == 0) {
         // Display result and return to menu
     }
+    return false;
 }
 
 // --------------------------------------------------

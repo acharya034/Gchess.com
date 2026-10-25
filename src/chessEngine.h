@@ -3,10 +3,10 @@
 #include <Arduino.h>
 // Board state tracking
 // board[x][y][0] = piece type/color
-char board[8][8][2];
+extern char board[8][8][2];
 
 // Compact chess state
-char castleRights = 0x0F;
+extern char castleRights;
 // Bit 0: White kingside
 // Bit 1: White queenside
 // Bit 2: Black kingside

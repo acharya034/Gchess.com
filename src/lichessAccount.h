@@ -2,14 +2,9 @@
 
 #include <Arduino.h>
 #include <WebServer.h>
-
-// Define this object once in your project, for example in main.cpp:
-// WebServer pairingServer(80);
-extern WebServer pairingServer;
+#include <general.h>
 
 // QRCodeData is defined by your existing QRCodeTFT/general header.
-struct QRCodeData;
-
 struct LichessAccount {
     String token;
     String username;

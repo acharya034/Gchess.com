@@ -1,4 +1,8 @@
 #include "general.h"
+#include "TFT_eSPI.h"
+
+TFT_eSPI display = TFT_eSPI();
+TFT_eSprite sprite = TFT_eSprite(&display);
 
 // Instantiate the global object handles here safely
 int connectedWifiStrength = 0;
@@ -334,7 +338,7 @@ bool generateQRCode(
     int requiredSize = qrcode_getBufferSize(version);
 
     if (requiredSize <= 0 ||
-        requiredSize > QR_MAX_BUFFER_SIZE) {
+        requiredSize > 1024) {
         code.valid = false;
         return false;
     }

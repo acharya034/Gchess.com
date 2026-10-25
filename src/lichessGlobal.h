@@ -56,26 +56,18 @@ extern String challengeColor;
 // --------------------------------------------------
 
 extern uint8_t aiLevel;
-extern String aiColor;
-extern uint16_t aiClockLimit;
-extern uint16_t aiClockIncrement;
+
+// --------------------------------------------------
+// Seek settings
+// --------------------------------------------------
+
+extern String seekRatingRange;
 
 // --------------------------------------------------
 // Move
 // --------------------------------------------------
 
 extern String move;
-
-// --------------------------------------------------
-// Seek settings
-// --------------------------------------------------
-
-extern bool seekRated;
-extern uint16_t seekTime;
-extern uint16_t seekIncrement;
-
-extern String seekColor;
-extern String seekRatingRange;
 
 // --------------------------------------------------
 // Chat settings

@@ -8,10 +8,17 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/semphr.h>
 #include <stdio.h>
+#include <general.h>
+
 
 // These match the QR helpers already used by the project. QRCodeData's full
 // definition can stay in the existing QRCodeTFT/general header.
-struct QRCodeData;
+struct QRCodeData ;
+
+// Define this object once in your project, for example in main.cpp:
+// WebServer pairingServer(80);
+extern WebServer pairingServer;
+
 bool generateQRCode(QRCodeData*& code, const char* text,
                     uint8_t version = 4, uint8_t ecc = 1);
 bool printQRCode(QRCodeData*& code, int16_t x, int16_t y, int16_t width,

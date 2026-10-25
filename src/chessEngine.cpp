@@ -1,6 +1,13 @@
 #include "chessEngine.h"
 #include <lichessProcessing.h>
 
+// board array for pieces and sq data
+char board[8][8][2];
+
+// Compact chess state
+char castleRights = 0x0F;
+
+
 int8_t selectedSq = 99;
 
 char enPassant = '-';  // '-' means unavailable; otherwise file 'a'–'h'
